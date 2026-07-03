@@ -51,3 +51,4 @@ zgt6_weatherclock\freertos.o: ../Core/Inc/ST7735.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/spi.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/rtc.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/usart.h
+zgt6_weatherclock\freertos.o: ../Core/Inc/app_config_private.h
