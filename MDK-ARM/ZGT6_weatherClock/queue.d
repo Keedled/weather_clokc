@@ -1,0 +1,15 @@
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/queue.c
+zgt6_weatherclock\queue.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+zgt6_weatherclock\queue.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+zgt6_weatherclock\queue.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+zgt6_weatherclock\queue.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+zgt6_weatherclock\queue.o: ../Core/Inc/FreeRTOSConfig.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+zgt6_weatherclock\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
