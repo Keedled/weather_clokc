@@ -101,8 +101,7 @@ typedef struct {
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define WEATHER_NOW_HTTP_CMD "AT+HTTPCGET=\"http://api.seniverse.com/v3/weather/now.json?key=" WEATHER_API_KEY "&location=" WEATHER_CITY "&language=en&unit=c\",2048,2048,30000\r\n"
-#define WEATHER_DAILY_PATH "/v3/weather/daily.json?key=" WEATHER_API_KEY "&location=" WEATHER_CITY "&language=en&unit=c&start=0&days=3"
-#define WEATHER_DAILY_HOST "api.seniverse.com"
+#define WEATHER_DAILY_HTTP_CMD "AT+HTTPCGET=\"http://api.seniverse.com/v3/weather/daily.json?key=" WEATHER_API_KEY "&location=" WEATHER_CITY "&language=en&unit=c&start=0&days=3\",4096,4096,30000\r\n"
 #define WEATHER_UPDATE_INTERVAL_MS  (10U * 60U * 1000U)
 #define WEATHER_RETRY_INTERVAL_MS   30000U
 #define WIFI_WAIT_INTERVAL_MS       5000U
@@ -203,9 +202,9 @@ const osMessageQueueAttr_t uiQueue_attributes = {
 static int ESP_Lock(uint32_t timeout_ms);
 static void ESP_Unlock(void);
 static void ESP_ClearRxBuf(void);
+static int BufferEndsWith(const char *buf, uint16_t len, const char *suffix);
 static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms);
 static int ESP_SendCmdRaw(const char *cmd, const char *expect, uint32_t timeout_ms);
-static int ESP_SendRawAndReadUntil(const char *data, const char *expect, uint32_t timeout_ms);
 static int ESP_CheckWiFi(void);
 static int ESP_ConnectWiFi(void);
 static int ESP_SyncTimeBySNTP(void);
@@ -1179,6 +1178,24 @@ static void ESP_ClearRxBuf(void)
   memset(espRxBuf, 0, sizeof(espRxBuf));
 }
 
+static int BufferEndsWith(const char *buf, uint16_t len, const char *suffix)
+{
+  size_t suffix_len;
+
+  if (buf == NULL || suffix == NULL)
+  {
+    return 0;
+  }
+
+  suffix_len = strlen(suffix);
+  if (suffix_len == 0 || len < suffix_len)
+  {
+    return 0;
+  }
+
+  return memcmp(buf + len - suffix_len, suffix, suffix_len) == 0;
+}
+
 static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms)
 {
   uint8_t ch;
@@ -1195,13 +1212,14 @@ static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms)
         espRxBuf[len] = '\0';
       }
 
-      if (expect != NULL && strstr((char *)espRxBuf, expect) != NULL)
+      if (expect != NULL && BufferEndsWith((char *)espRxBuf, len, expect))
       {
         return 1;
       }
 
-      if (strstr((char *)espRxBuf, "ERROR") != NULL ||
-          strstr((char *)espRxBuf, "FAIL") != NULL)
+      if (BufferEndsWith((char *)espRxBuf, len, "ERROR\r\n") ||
+          BufferEndsWith((char *)espRxBuf, len, "FAIL\r\n") ||
+          BufferEndsWith((char *)espRxBuf, len, "busy p...\r\n"))
       {
         return 0;
       }
@@ -1216,21 +1234,6 @@ static int ESP_SendCmdRaw(const char *cmd, const char *expect, uint32_t timeout_
   ESP_ClearRxBuf();
 
   if (HAL_UART_Transmit(&huart1, (uint8_t *)cmd, strlen(cmd), 1000) != HAL_OK)
-  {
-    return 0;
-  }
-
-  return ESP_ReadUntil(expect, timeout_ms);
-}
-
-static int ESP_SendRawAndReadUntil(const char *data, const char *expect, uint32_t timeout_ms)
-{
-  if (data == NULL)
-  {
-    return 0;
-  }
-
-  if (HAL_UART_Transmit(&huart1, (uint8_t *)data, strlen(data), 1000) != HAL_OK)
   {
     return 0;
   }
@@ -1378,11 +1381,9 @@ done:
 
 static WeatherDailyResult ESP_GetDailyForecast(ForecastDay out[3])
 {
-  char cmd[128];
-  char request[320];
+  const char http_cmd[] = WEATHER_DAILY_HTTP_CMD;
   WeatherDailyResult result = WEATHER_DAILY_HTTP_FAIL;
   int parse_ok;
-  int request_len;
 
   if (out == NULL)
   {
@@ -1394,32 +1395,7 @@ static WeatherDailyResult ESP_GetDailyForecast(ForecastDay out[3])
     return WEATHER_DAILY_HTTP_FAIL;
   }
 
-  ESP_SendCmdRaw("AT+CIPCLOSE\r\n", "OK", 2000);
-
-  if (!ESP_SendCmdRaw("AT+CIPSTART=\"TCP\",\"" WEATHER_DAILY_HOST "\",80\r\n", "OK", 10000) &&
-      strstr((char *)espRxBuf, "ALREADY CONNECTED") == NULL)
-  {
-    goto done;
-  }
-
-  snprintf(request,
-           sizeof(request),
-           "GET %s HTTP/1.1\r\n"
-           "Host: %s\r\n"
-           "Connection: close\r\n"
-           "\r\n",
-           WEATHER_DAILY_PATH,
-           WEATHER_DAILY_HOST);
-
-  request_len = (int)strlen(request);
-  snprintf(cmd, sizeof(cmd), "AT+CIPSEND=%d\r\n", request_len);
-
-  if (!ESP_SendCmdRaw(cmd, ">", 5000))
-  {
-    goto done;
-  }
-
-  if (!ESP_SendRawAndReadUntil(request, "\"daily\"", 30000))
+  if (!ESP_SendCmdRaw(http_cmd, "\r\nOK\r\n", 30000))
   {
     goto done;
   }
@@ -1431,7 +1407,6 @@ static WeatherDailyResult ESP_GetDailyForecast(ForecastDay out[3])
   result = parse_ok ? WEATHER_DAILY_PARSE_OK : WEATHER_DAILY_PARSE_FAIL;
 
 done:
-  ESP_SendCmdRaw("AT+CIPCLOSE\r\n", "OK", 2000);
   ESP_Unlock();
   return result;
 }
