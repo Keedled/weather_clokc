@@ -104,6 +104,7 @@ typedef struct {
 #define WEATHER_DAILY_HTTP_CMD "AT+HTTPCGET=\"http://api.seniverse.com/v3/weather/daily.json?key=" WEATHER_API_KEY "&location=" WEATHER_CITY "&language=en&unit=c&start=0&days=3\",4096,4096,30000\r\n"
 #define WEATHER_UPDATE_INTERVAL_MS  (10U * 60U * 1000U)
 #define WEATHER_RETRY_INTERVAL_MS   30000U
+#define ESP32_TASK_INTERVAL_MS      60000U
 #define WIFI_WAIT_INTERVAL_MS       5000U
 #define WIFI_CHECK_INTERVAL_MS      10000U
 /* USER CODE END PD */
@@ -177,17 +178,10 @@ const osThreadAttr_t TimeTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for NetworkTask */
-osThreadId_t NetworkTaskHandle;
-const osThreadAttr_t NetworkTask_attributes = {
-  .name = "NetworkTask",
-  .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for WeatherTask */
-osThreadId_t WeatherTaskHandle;
-const osThreadAttr_t WeatherTask_attributes = {
-  .name = "WeatherTask",
+/* Definitions for Esp32Task */
+osThreadId_t Esp32TaskHandle;
+const osThreadAttr_t Esp32Task_attributes = {
+  .name = "Esp32Task",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
@@ -240,8 +234,7 @@ static const char *Forecast_DateShort(const char *date);
 void StartKeyTask(void *argument);
 void StartUiTask(void *argument);
 void StartTimeTask(void *argument);
-void StartNetworkTask(void *argument);
-void StartWeatherTask(void *argument);
+void StartEsp32Task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -286,11 +279,8 @@ void MX_FREERTOS_Init(void) {
   /* creation of TimeTask */
   TimeTaskHandle = osThreadNew(StartTimeTask, NULL, &TimeTask_attributes);
 
-  /* creation of NetworkTask */
-  NetworkTaskHandle = osThreadNew(StartNetworkTask, NULL, &NetworkTask_attributes);
-
-  /* creation of WeatherTask */
-  WeatherTaskHandle = osThreadNew(StartWeatherTask, NULL, &WeatherTask_attributes);
+  /* creation of Esp32Task */
+  Esp32TaskHandle = osThreadNew(StartEsp32Task, NULL, &Esp32Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -657,20 +647,24 @@ void StartTimeTask(void *argument)
   /* USER CODE END StartTimeTask */
 }
 
-/* USER CODE BEGIN Header_StartNetworkTask */
+/* USER CODE BEGIN Header_StartEsp32Task */
 /**
-* @brief Function implementing the NetworkTask thread.
+* @brief Function implementing the Esp32Task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartNetworkTask */
-void StartNetworkTask(void *argument)
+/* USER CODE END Header_StartEsp32Task */
+void StartEsp32Task(void *argument)
 {
-  /* USER CODE BEGIN StartNetworkTask */
+  /* USER CODE BEGIN StartEsp32Task */
+  WeatherNow weather_now;
+  ForecastDay forecast[3];
+  WeatherDailyResult daily_result;
   uint8_t wifi_ok;
   uint8_t sntp_tried = 0;
+  uint32_t wait_ms;
 
-  osDelay(1500);
+  osDelay(3000);
 
   for(;;)
   {
@@ -680,67 +674,24 @@ void StartNetworkTask(void *argument)
     }
     else
     {
-      wifi_ok = ESP_ConnectWiFi() ? 1 : 0;
+      wifi_ok = ESP_ConnectWiFi() ? 1U : 0U;
     }
 
     UI_ModelSetNetwork(wifi_ok);
-    if (wifi_ok && !sntp_tried)
+    UI_PostMessage(UI_MSG_NETWORK_CHANGE);
+    if (!wifi_ok)
+    {
+      sntp_tried = 0;
+      UI_ModelSetNtpOk(0);
+      osDelay(WEATHER_RETRY_INTERVAL_MS);
+      continue;
+    }
+
+    if (!sntp_tried)
     {
       sntp_tried = 1;
       ESP_SyncTimeBySNTP();
     }
-    else
-    {
-      if (!wifi_ok)
-      {
-        UI_ModelSetNtpOk(0);
-      }
-    }
-
-    UI_PostMessage(UI_MSG_NETWORK_CHANGE);
-    osDelay(WIFI_CHECK_INTERVAL_MS);
-  }
-  /* USER CODE END StartNetworkTask */
-}
-
-/* USER CODE BEGIN Header_StartWeatherTask */
-/**
-* @brief Function implementing the WeatherTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartWeatherTask */
-void StartWeatherTask(void *argument)
-{
-  /* USER CODE BEGIN StartWeatherTask */
-  uint32_t last_update = 0;
-  uint32_t now;
-  WeatherNow weather_now;
-  ForecastDay forecast[3];
-  WeatherDailyResult daily_result;
-
-  osDelay(8000);
-  g_weatherForceUpdate = 1;
-
-  for(;;)
-  {
-    if (!UI_ModelGetWifiOk())
-    {
-      osDelay(1000);
-      continue;
-    }
-
-    now = osKernelGetTickCount();
-    if (!g_weatherForceUpdate &&
-        (last_update != 0) &&
-        ((now - last_update) < WEATHER_UPDATE_INTERVAL_MS))
-    {
-      osDelay(1000);
-      continue;
-    }
-
-    g_weatherForceUpdate = 0;
-    last_update = now;
 
     if (ESP_GetWeather(&weather_now))
     {
@@ -759,7 +710,7 @@ void StartWeatherTask(void *argument)
       UI_PostMessage(UI_MSG_WEATHER_UPDATE);
     }
 
-    osDelay(1500);
+    osDelay(3000);
 
     daily_result = ESP_GetDailyForecast(forecast);
     if (daily_result == WEATHER_DAILY_PARSE_OK)
@@ -783,9 +734,17 @@ void StartWeatherTask(void *argument)
       continue;
     }
 
-    osDelay(1000);
+    g_weatherForceUpdate = 0;
+    for (wait_ms = 0; wait_ms < ESP32_TASK_INTERVAL_MS; wait_ms += 1000U)
+    {
+      if (g_weatherForceUpdate)
+      {
+        break;
+      }
+      osDelay(1000);
+    }
   }
-  /* USER CODE END StartWeatherTask */
+  /* USER CODE END StartEsp32Task */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -1396,6 +1355,12 @@ static WeatherDailyResult ESP_GetDailyForecast(ForecastDay out[3])
   }
 
   if (!ESP_SendCmdRaw(http_cmd, "\r\nOK\r\n", 30000))
+  {
+    goto done;
+  }
+
+  if (strstr((char *)espRxBuf, "\"results\"") == NULL ||
+      strstr((char *)espRxBuf, "\"daily\"") == NULL)
   {
     goto done;
   }
