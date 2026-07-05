@@ -47,8 +47,7 @@ zgt6_weatherclock\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_R
 zgt6_weatherclock\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 zgt6_weatherclock\freertos.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 zgt6_weatherclock\freertos.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-zgt6_weatherclock\freertos.o: ../Core/Inc/ST7735.h
-zgt6_weatherclock\freertos.o: ../Core/Inc/spi.h
+zgt6_weatherclock\freertos.o: ../Core/Inc/app_ui.h
+zgt6_weatherclock\freertos.o: ../Core/Inc/app_types.h
+zgt6_weatherclock\freertos.o: ../Core/Inc/esp32_client.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/rtc.h
-zgt6_weatherclock\freertos.o: ../Core/Inc/usart.h
-zgt6_weatherclock\freertos.o: ../Core/Inc/app_config_private.h

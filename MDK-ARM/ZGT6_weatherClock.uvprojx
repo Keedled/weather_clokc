@@ -416,6 +416,21 @@
               <FilePath>../Core/Src/freertos.c</FilePath>
             </File>
             <File>
+              <FileName>app_ui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Core/Src/app_ui.c</FilePath>
+            </File>
+            <File>
+              <FileName>esp32_client.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Core/Src/esp32_client.c</FilePath>
+            </File>
+            <File>
+              <FileName>weather_parser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Core/Src/weather_parser.c</FilePath>
+            </File>
+            <File>
               <FileName>rtc.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/rtc.c</FilePath>
