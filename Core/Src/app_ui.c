@@ -39,7 +39,8 @@ static UiModel g_uiModel = {
     .parse_now_ok = 0,
     .parse_daily_ok = 0,
     .rtc_ok = 0,
-    .ntp_ok = 0
+    .ntp_ok = 0,
+    .mqtt_ok = 0
 };
 
 static volatile uint8_t g_weatherForceUpdate = 0;
@@ -187,6 +188,7 @@ void AppUi_ModelSetNetwork(uint8_t wifi_ok)
       g_uiModel.api_daily_ok = 0;
       g_uiModel.parse_now_ok = 0;
       g_uiModel.parse_daily_ok = 0;
+      g_uiModel.mqtt_ok = 0;
     }
     UI_ModelUnlock();
   }
@@ -242,6 +244,15 @@ void AppUi_ModelSetNtpOk(uint8_t ntp_ok)
   if (UI_ModelLock(osWaitForever))
   {
     g_uiModel.ntp_ok = ntp_ok ? 1U : 0U;
+    UI_ModelUnlock();
+  }
+}
+
+void AppUi_ModelSetMqttOk(uint8_t mqtt_ok)
+{
+  if (UI_ModelLock(osWaitForever))
+  {
+    g_uiModel.mqtt_ok = mqtt_ok ? 1U : 0U;
     UI_ModelUnlock();
   }
 }
@@ -480,18 +491,20 @@ static void UI_DrawDebugPage(const UiModel *model)
   Z_ST7735S_RefreshAll(ST7735_BLACK);
 
   UI_DrawText(5, 5, "DEBUG", ST7735_WHITE);
-  UI_DrawText(5, 25, "WiFi:", ST7735_WHITE);
-  UI_DrawText(65, 25, model->wifi_ok ? "OK" : "NO", ST7735_GREEN);
-  UI_DrawText(5, 45, "Now:", ST7735_WHITE);
-  UI_DrawText(65, 45, model->api_now_ok ? "OK" : "NO", ST7735_GREEN);
-  UI_DrawText(5, 65, "Daily:", ST7735_WHITE);
-  UI_DrawText(65, 65, model->api_daily_ok ? "OK" : "NO", ST7735_GREEN);
-  UI_DrawText(5, 85, "JsonN:", ST7735_WHITE);
-  UI_DrawText(65, 85, model->parse_now_ok ? "OK" : "NO", ST7735_GREEN);
-  UI_DrawText(5, 105, "JsonD:", ST7735_WHITE);
-  UI_DrawText(65, 105, model->parse_daily_ok ? "OK" : "NO", ST7735_GREEN);
+  UI_DrawText(5, 23, "WiFi:", ST7735_WHITE);
+  UI_DrawText(65, 23, model->wifi_ok ? "OK" : "NO", model->wifi_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 40, "MQTT:", ST7735_WHITE);
+  UI_DrawText(65, 40, model->mqtt_ok ? "OK" : "NO", model->mqtt_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 57, "Now:", ST7735_WHITE);
+  UI_DrawText(65, 57, model->api_now_ok ? "OK" : "NO", model->api_now_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 74, "Daily:", ST7735_WHITE);
+  UI_DrawText(65, 74, model->api_daily_ok ? "OK" : "NO", model->api_daily_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 91, "JsonN:", ST7735_WHITE);
+  UI_DrawText(65, 91, model->parse_now_ok ? "OK" : "NO", model->parse_now_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 108, "JsonD:", ST7735_WHITE);
+  UI_DrawText(65, 108, model->parse_daily_ok ? "OK" : "NO", model->parse_daily_ok ? ST7735_GREEN : ST7735_RED);
   UI_DrawText(5, 125, "RTC:", ST7735_WHITE);
-  UI_DrawText(65, 125, model->rtc_ok ? "OK" : "NO", ST7735_GREEN);
-  UI_DrawText(5, 145, "NTP:", ST7735_WHITE);
-  UI_DrawText(65, 145, model->ntp_ok ? "OK" : "NO", ST7735_GREEN);
+  UI_DrawText(65, 125, model->rtc_ok ? "OK" : "NO", model->rtc_ok ? ST7735_GREEN : ST7735_RED);
+  UI_DrawText(5, 142, "NTP:", ST7735_WHITE);
+  UI_DrawText(65, 142, model->ntp_ok ? "OK" : "NO", model->ntp_ok ? ST7735_GREEN : ST7735_RED);
 }

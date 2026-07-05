@@ -49,5 +49,6 @@ zgt6_weatherclock\freertos.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 zgt6_weatherclock\freertos.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/app_ui.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/app_types.h
+zgt6_weatherclock\freertos.o: ../Core/Inc/app_config_private.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/esp32_client.h
 zgt6_weatherclock\freertos.o: ../Core/Inc/rtc.h

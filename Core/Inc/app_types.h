@@ -53,6 +53,7 @@ typedef struct {
     uint8_t parse_daily_ok;
     uint8_t rtc_ok;
     uint8_t ntp_ok;
+    uint8_t mqtt_ok;
 } UiModel;
 
 #endif /* __APP_TYPES_H */

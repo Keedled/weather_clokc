@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "app_ui.h"
+#include "app_config_private.h"
 #include "esp32_client.h"
 #include "rtc.h"
 /* USER CODE END Includes */
@@ -40,8 +41,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define WEATHER_RETRY_INTERVAL_MS   30000U
-#define ESP32_TASK_INTERVAL_MS      60000U
+#define WEATHER_UPDATE_INTERVAL_MS  600000U
+/* ESP-AT MQTT receive is asynchronous; stay in UART receive most of the time. */
+#define MQTT_POLL_INTERVAL_MS       1U
+#define MQTT_POLL_TIMEOUT_MS        500U
+#define WIFI_CHECK_INTERVAL_MS      10000U
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -92,6 +96,7 @@ const osMessageQueueAttr_t uiQueue_attributes = {
 static int RTC_SetDateTime(const RTC_DateTypeDef *date, const RTC_TimeTypeDef *time);
 static int ParseISOTime(const char *str, RTC_DateTypeDef *date, RTC_TimeTypeDef *time);
 static int RTC_SetFromWeatherTime(const char *time_str);
+static void Mqtt_HandleCmd(const char *payload);
 /* USER CODE END FunctionPrototypes */
 
 void StartKeyTask(void *argument);
@@ -311,31 +316,65 @@ void StartEsp32Task(void *argument)
   WeatherDailyResult daily_result;
   RTC_TimeTypeDef sTime;
   RTC_DateTypeDef sDate;
-  uint8_t wifi_ok;
+  uint8_t wifi_ok = 0;
+  uint8_t mqtt_ok = 0;
   uint8_t sntp_tried = 0;
-  uint32_t wait_ms;
+  uint32_t last_weather_tick = 0;
+  uint32_t last_wifi_check_tick = 0;
+  uint32_t now_tick;
+  int mqtt_poll_result;
+  char mqtt_topic[128];
+  char mqtt_payload[256];
 
   osDelay(3000);
 
   for(;;)
   {
-    if (ESP32_CheckWiFi())
+    now_tick = HAL_GetTick();
+
+    /* Do not query WiFi every 500 ms; AT+CWJAP? is much slower than MQTT poll. */
+    if (!wifi_ok || (now_tick - last_wifi_check_tick >= WIFI_CHECK_INTERVAL_MS))
     {
-      wifi_ok = 1;
-    }
-    else
-    {
-      wifi_ok = ESP32_ConnectWiFi() ? 1U : 0U;
+      last_wifi_check_tick = now_tick;
+      if (ESP32_CheckWiFi())
+      {
+        wifi_ok = 1;
+      }
+      else
+      {
+        wifi_ok = ESP32_ConnectWiFi() ? 1U : 0U;
+        mqtt_ok = 0;
+        sntp_tried = 0;
+      }
     }
 
     AppUi_ModelSetNetwork(wifi_ok);
     AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
     if (!wifi_ok)
     {
-      sntp_tried = 0;
       AppUi_ModelSetNtpOk(0);
-      osDelay(WEATHER_RETRY_INTERVAL_MS);
+      AppUi_ModelSetMqttOk(0);
+      osDelay(3000);
       continue;
+    }
+
+    if (!mqtt_ok)
+    {
+      mqtt_ok = ESP32_MqttConnect() ? 1U : 0U;
+      if (mqtt_ok)
+      {
+        if (!ESP32_MqttSubscribeCmd())
+        {
+          mqtt_ok = 0;
+        }
+        else
+        {
+          /* Publish a small state payload; topic and payload are different things. */
+          ESP32_MqttPublish(MQTT_TOPIC_STATE, "wifi=1,mqtt=1");
+        }
+      }
+      AppUi_ModelSetMqttOk(mqtt_ok);
+      AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
     }
 
     if (!sntp_tried)
@@ -351,57 +390,80 @@ void StartEsp32Task(void *argument)
       }
     }
 
-    if (ESP32_GetWeather(&weather_now))
+    /* First boot updates immediately; after that, update every 10 minutes. */
+    if (last_weather_tick == 0U ||
+        (now_tick - last_weather_tick >= WEATHER_UPDATE_INTERVAL_MS) ||
+        AppUi_IsWeatherForceUpdateRequested())
     {
-      AppUi_ModelSetApiNowOk(1);
-      if (weather_now.update_time[0] != '\0' &&
-          strcmp(weather_now.update_time, "--") != 0)
+      if (ESP32_GetWeather(&weather_now))
       {
-        RTC_SetFromWeatherTime(weather_now.update_time);
+        AppUi_ModelSetApiNowOk(1);
+        if (weather_now.update_time[0] != '\0' &&
+            strcmp(weather_now.update_time, "--") != 0)
+        {
+          RTC_SetFromWeatherTime(weather_now.update_time);
+        }
+        AppUi_ModelUpdateWeather(&weather_now);
+
+        if (mqtt_ok)
+        {
+          /* This publishes payload "weather_now_ok" to MQTT_TOPIC_WEATHER. */
+          ESP32_MqttPublish(MQTT_TOPIC_WEATHER, "weather_now_ok");
+        }
       }
-      AppUi_ModelUpdateWeather(&weather_now);
-    }
-    else
-    {
-      AppUi_ModelSetApiNowOk(0);
-      AppUi_ModelSetParseNowOk(0);
-      AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
-    }
-
-    osDelay(3000);
-
-    daily_result = ESP32_GetDailyForecast(forecast);
-    if (daily_result == WEATHER_DAILY_PARSE_OK)
-    {
-      AppUi_ModelSetApiDailyOk(1);
-      AppUi_ModelUpdateForecast(forecast);
-    }
-    else if (daily_result == WEATHER_DAILY_PARSE_FAIL)
-    {
-      AppUi_ModelSetApiDailyOk(1);
-      AppUi_ModelSetParseDailyOk(0);
-      AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
-      osDelay(WEATHER_RETRY_INTERVAL_MS);
-      continue;
-    }
-    else
-    {
-      AppUi_ModelSetApiDailyOk(0);
-      AppUi_ModelSetParseDailyOk(0);
-      AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
-      osDelay(WEATHER_RETRY_INTERVAL_MS);
-      continue;
-    }
-
-    AppUi_ClearWeatherForceUpdate();
-    for (wait_ms = 0; wait_ms < ESP32_TASK_INTERVAL_MS; wait_ms += 1000U)
-    {
-      if (AppUi_IsWeatherForceUpdateRequested())
+      else
       {
-        break;
+        AppUi_ModelSetApiNowOk(0);
+        AppUi_ModelSetParseNowOk(0);
+        AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
       }
+
       osDelay(1000);
+
+      daily_result = ESP32_GetDailyForecast(forecast);
+      if (daily_result == WEATHER_DAILY_PARSE_OK)
+      {
+        AppUi_ModelSetApiDailyOk(1);
+        AppUi_ModelUpdateForecast(forecast);
+      }
+      else if (daily_result == WEATHER_DAILY_PARSE_FAIL)
+      {
+        AppUi_ModelSetApiDailyOk(1);
+        AppUi_ModelSetParseDailyOk(0);
+        AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
+      }
+      else
+      {
+        AppUi_ModelSetApiDailyOk(0);
+        AppUi_ModelSetParseDailyOk(0);
+        AppUi_PostMessage(UI_MSG_WEATHER_UPDATE);
+      }
+
+      AppUi_ClearWeatherForceUpdate();
+      last_weather_tick = HAL_GetTick();
     }
+
+    if (mqtt_ok)
+    {
+      /* Return value: 1 means command received, 0 means no data, -1 means disconnected. */
+      mqtt_poll_result = ESP32_MqttPoll(mqtt_topic,
+                                        sizeof(mqtt_topic),
+                                        mqtt_payload,
+                                        sizeof(mqtt_payload),
+                                        MQTT_POLL_TIMEOUT_MS);
+      if (mqtt_poll_result > 0)
+      {
+        Mqtt_HandleCmd(mqtt_payload);
+      }
+      else if (mqtt_poll_result < 0)
+      {
+        mqtt_ok = 0;
+        AppUi_ModelSetMqttOk(0);
+        AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
+      }
+    }
+
+    osDelay(MQTT_POLL_INTERVAL_MS);
   }
   /* USER CODE END StartEsp32Task */
 }
@@ -490,5 +552,34 @@ static int RTC_SetFromWeatherTime(const char *time_str)
 
   return RTC_SetDateTime(&sDate, &sTime);
 }
-/* USER CODE END Application */
 
+static void Mqtt_HandleCmd(const char *payload)
+{
+  if (payload == NULL)
+  {
+    return;
+  }
+
+  /* MQTT commands reuse the same UI queue as physical keys. */
+  if (strstr(payload, "page_next") != NULL)
+  {
+    AppUi_PostMessage(UI_MSG_RIGHT);
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "page_next_ok");
+  }
+  else if (strstr(payload, "page_prev") != NULL)
+  {
+    AppUi_PostMessage(UI_MSG_LEFT);
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "page_prev_ok");
+  }
+  else if (strstr(payload, "page_home") != NULL)
+  {
+    AppUi_PostMessage(UI_MSG_BACK);
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "page_home_ok");
+  }
+  else if (strstr(payload, "weather_refresh") != NULL)
+  {
+    AppUi_PostMessage(UI_MSG_OK);
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "weather_refresh_ok");
+  }
+}
+/* USER CODE END Application */

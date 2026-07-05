@@ -21,6 +21,7 @@ void AppUi_ModelSetParseNowOk(uint8_t parse_ok);
 void AppUi_ModelSetParseDailyOk(uint8_t parse_ok);
 void AppUi_ModelSetRtcOk(uint8_t rtc_ok);
 void AppUi_ModelSetNtpOk(uint8_t ntp_ok);
+void AppUi_ModelSetMqttOk(uint8_t mqtt_ok);
 void AppUi_ModelUpdateWeather(const WeatherNow *weather_now);
 void AppUi_ModelUpdateForecast(const ForecastDay forecast[3]);
 
