@@ -1,11 +1,11 @@
 #include "esp32_client.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "app_config_private.h"
 #include "cmsis_os.h"
+#include "esp32_rx.h"
 #include "main.h"
 #include "usart.h"
 #include "weather_parser.h"
@@ -23,15 +23,9 @@ static const osMutexAttr_t espMutex_attributes = {
 static int ESP_Lock(uint32_t timeout_ms);
 static void ESP_Unlock(void);
 static void ESP_ClearRxBuf(void);
-static int BufferEndsWith(const char *buf, uint16_t len, const char *suffix);
 static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms);
 static int ESP_SendCmdRaw(const char *cmd, const char *expect, uint32_t timeout_ms);
 static int ESP_ParseSntpTime(const char *src, RTC_DateTypeDef *date, RTC_TimeTypeDef *time);
-static int ESP_ParseMqttSubRecv(const char *buf,
-                                char *topic,
-                                uint16_t topic_size,
-                                char *payload,
-                                uint16_t payload_size);
 
 /*
  * Initialize the ESP32 client module.
@@ -40,7 +34,7 @@ static int ESP_ParseMqttSubRecv(const char *buf,
 int ESP32_ClientInit(void)
 {
   espMutexHandle = osMutexNew(&espMutex_attributes);
-  return espMutexHandle != NULL;
+  return espMutexHandle != NULL && ESP32_RxInit();
 }
 
 /*
@@ -77,62 +71,15 @@ static void ESP_ClearRxBuf(void)
 }
 
 /*
- * Check whether the current response buffer ends with a target suffix.
- * Used to detect terminal strings like "OK\r\n" and "ERROR\r\n".
- */
-static int BufferEndsWith(const char *buf, uint16_t len, const char *suffix)
-{
-  size_t suffix_len;
-
-  if (buf == NULL || suffix == NULL)
-  {
-    return 0;
-  }
-
-  suffix_len = strlen(suffix);
-  if (suffix_len == 0 || len < suffix_len)
-  {
-    return 0;
-  }
-
-  return memcmp(buf + len - suffix_len, suffix, suffix_len) == 0;
-}
-
-/*
  * Receive bytes from USART1 until the expected suffix appears or timeout expires.
  * Returns 1 on expected response, 0 on timeout or ESP-AT error response.
  */
 static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms)
 {
-  uint8_t ch;
-  uint16_t len = (uint16_t)strlen((char *)espRxBuf);
-  uint32_t start_tick = HAL_GetTick();
-
-  while ((HAL_GetTick() - start_tick) < timeout_ms)
-  {
-    if (HAL_UART_Receive(&huart1, &ch, 1, 20) == HAL_OK)
-    {
-      if (len < sizeof(espRxBuf) - 1)
-      {
-        espRxBuf[len++] = ch;
-        espRxBuf[len] = '\0';
-      }
-
-      if (expect != NULL && BufferEndsWith((char *)espRxBuf, len, expect))
-      {
-        return 1;
-      }
-
-      if (BufferEndsWith((char *)espRxBuf, len, "ERROR\r\n") ||
-          BufferEndsWith((char *)espRxBuf, len, "FAIL\r\n") ||
-          BufferEndsWith((char *)espRxBuf, len, "busy p...\r\n"))
-      {
-        return 0;
-      }
-    }
-  }
-
-  return 0;
+  return ESP32_RxWaitFor(expect,
+                         (char *)espRxBuf,
+                         sizeof(espRxBuf),
+                         timeout_ms);
 }
 
 /*
@@ -142,9 +89,11 @@ static int ESP_ReadUntil(const char *expect, uint32_t timeout_ms)
 static int ESP_SendCmdRaw(const char *cmd, const char *expect, uint32_t timeout_ms)
 {
   ESP_ClearRxBuf();
+  ESP32_RxBeginCommand();
 
   if (HAL_UART_Transmit(&huart1, (uint8_t *)cmd, strlen(cmd), 1000) != HAL_OK)
   {
+    ESP32_RxCancelCommand();
     return 0;
   }
 
@@ -457,7 +406,7 @@ int ESP32_MqttPublish(const char *topic, const char *payload)
 }
 
 /*
- * Poll USART1 briefly for asynchronous MQTT input from ESP-AT.
+ * Poll the demuxed URC queue for asynchronous MQTT input from ESP-AT.
  * Returns 1 when topic/payload is parsed, 0 when no message arrives, -1 on error/disconnect.
  */
 int ESP32_MqttPoll(char *topic,
@@ -466,9 +415,7 @@ int ESP32_MqttPoll(char *topic,
                    uint16_t payload_size,
                    uint32_t timeout_ms)
 {
-  uint8_t ch;
-  uint16_t len = 0;
-  uint32_t start_tick = HAL_GetTick();
+  Esp32RxUrcEvent event;
 
   if (topic == NULL || topic_size == 0 ||
       payload == NULL || payload_size == 0)
@@ -479,135 +426,23 @@ int ESP32_MqttPoll(char *topic,
   topic[0] = '\0';
   payload[0] = '\0';
 
-  if (!ESP_Lock(timeout_ms + 100U))
+  if (!ESP32_RxGetUrc(&event, timeout_ms))
+  {
+    return 0;
+  }
+
+  if (event.type == ESP32_RX_URC_MQTT_DISCONNECTED)
   {
     return -1;
   }
 
-  /* Short polling keeps MQTT responsive during the 10-minute weather interval. */
-  ESP_ClearRxBuf();
-
-  while ((HAL_GetTick() - start_tick) < timeout_ms)
-  {
-    if (HAL_UART_Receive(&huart1, &ch, 1, 20) == HAL_OK)
-    {
-      if (len < sizeof(espRxBuf) - 1)
-      {
-        espRxBuf[len++] = ch;
-        espRxBuf[len] = '\0';
-      }
-
-      if (strstr((char *)espRxBuf, "+MQTTDISCONNECTED") != NULL)
-      {
-        ESP_Unlock();
-        return -1;
-      }
-
-      if (ESP_ParseMqttSubRecv((char *)espRxBuf,
-                               topic,
-                               topic_size,
-                               payload,
-                               payload_size))
-      {
-        ESP_Unlock();
-        return 1;
-      }
-    }
-  }
-
-  ESP_Unlock();
-  return 0;
-}
-
-/*
- * Parse ESP-AT subscription notifications:
- * +MQTTSUBRECV:0,"topic",len,payload
- */
-static int ESP_ParseMqttSubRecv(const char *buf,
-                                char *topic,
-                                uint16_t topic_size,
-                                char *payload,
-                                uint16_t payload_size)
-{
-  const char *p;
-  const char *t1;
-  const char *t2;
-  const char *comma;
-  const char *payload_start;
-  size_t topic_len;
-  size_t available_len;
-  int data_len;
-  int copy_len;
-
-  if (buf == NULL || topic == NULL || topic_size == 0 ||
-      payload == NULL || payload_size == 0)
+  if (event.type != ESP32_RX_URC_MQTT_MESSAGE)
   {
     return 0;
   }
 
-  p = strstr(buf, "+MQTTSUBRECV:");
-  if (p == NULL)
-  {
-    return 0;
-  }
-
-  /* Format: +MQTTSUBRECV:0,"topic",len,payload */
-  t1 = strchr(p, '"');
-  if (t1 == NULL)
-  {
-    return 0;
-  }
-
-  t2 = strchr(t1 + 1, '"');
-  if (t2 == NULL)
-  {
-    return 0;
-  }
-
-  topic_len = (size_t)(t2 - t1 - 1);
-  if (topic_len >= topic_size)
-  {
-    topic_len = topic_size - 1;
-  }
-
-  memcpy(topic, t1 + 1, topic_len);
-  topic[topic_len] = '\0';
-
-  comma = strchr(t2 + 1, ',');
-  if (comma == NULL)
-  {
-    return 0;
-  }
-
-  data_len = atoi(comma + 1);
-
-  comma = strchr(comma + 1, ',');
-  if (comma == NULL || data_len <= 0)
-  {
-    return 0;
-  }
-
-  payload_start = comma + 1;
-  available_len = strlen(payload_start);
-
-  /*
-   * ESP32_MqttPoll receives one byte at a time. Do not report success until
-   * the whole payload promised by ESP-AT has arrived, otherwise commands such
-   * as {"cmd":"page_next"} can be parsed as an empty partial payload.
-   */
-  if (available_len < (size_t)data_len)
-  {
-    return 0;
-  }
-
-  copy_len = data_len;
-  if (copy_len >= payload_size)
-  {
-    copy_len = payload_size - 1;
-  }
-
-  memcpy(payload, payload_start, (size_t)copy_len);
-  payload[copy_len] = '\0';
+  snprintf(topic, topic_size, "%s", event.topic);
+  snprintf(payload, payload_size, "%s", event.payload);
 
   return 1;
 }
