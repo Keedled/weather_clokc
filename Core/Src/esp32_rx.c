@@ -86,7 +86,8 @@ static const osThreadAttr_t rxTask_attributes = {
 };
 
 static int ESP32_RxStartUart(void);
-static void ESP32_RxContinueUart(void);
+static int ESP32_RxArmReceive(void);
+static void ESP32_RxRecoverUart(void);
 static void ESP32_RxProcessByte(uint8_t ch);
 static void ESP32_RxProcessLine(const char *line, uint16_t len);
 static void ESP32_RxAppendResponse(const char *data, uint16_t len);
@@ -266,7 +267,7 @@ void ESP32_RxUartRxCpltCallback(UART_HandleTypeDef *huart)
     {
       osMessageQueuePut(rxByteQueueHandle, &uartRxByte, 0, 0);
     }
-    ESP32_RxContinueUart();
+    ESP32_RxArmReceive();
   }
 }
 
@@ -274,7 +275,8 @@ void ESP32_RxUartErrorCallback(UART_HandleTypeDef *huart)
 {
   if (huart != NULL && huart->Instance == USART1)
   {
-    ESP32_RxContinueUart();
+    ESP32_RxRecoverUart();
+    ESP32_RxArmReceive();
   }
 }
 
@@ -293,12 +295,41 @@ static int ESP32_RxStartUart(void)
   HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
 
+  return ESP32_RxArmReceive();
+}
+
+static int ESP32_RxArmReceive(void)
+{
+  HAL_StatusTypeDef status;
+
+  status = HAL_UART_Receive_IT(&huart1, &uartRxByte, 1);
+  if (status == HAL_OK)
+  {
+    return 1;
+  }
+
+  if (status == HAL_BUSY && huart1.RxState == HAL_UART_STATE_BUSY_RX)
+  {
+    return 1;
+  }
+
+  ESP32_RxRecoverUart();
   return HAL_UART_Receive_IT(&huart1, &uartRxByte, 1) == HAL_OK;
 }
 
-static void ESP32_RxContinueUart(void)
+static void ESP32_RxRecoverUart(void)
 {
-  HAL_UART_Receive_IT(&huart1, &uartRxByte, 1);
+  __HAL_UART_DISABLE_IT(&huart1, UART_IT_RXNE);
+  __HAL_UART_DISABLE_IT(&huart1, UART_IT_PE);
+  __HAL_UART_DISABLE_IT(&huart1, UART_IT_ERR);
+
+  __HAL_UART_CLEAR_PEFLAG(&huart1);
+  __HAL_UART_CLEAR_FEFLAG(&huart1);
+  __HAL_UART_CLEAR_NEFLAG(&huart1);
+  __HAL_UART_CLEAR_OREFLAG(&huart1);
+
+  HAL_UART_AbortReceive(&huart1);
+  huart1.ErrorCode = HAL_UART_ERROR_NONE;
 }
 
 static void ESP32_RxProcessByte(uint8_t ch)

@@ -103,6 +103,65 @@ static int ExtractStringRange(const char *start,
   return 1;
 }
 
+static const char *FindJsonObjectEnd(const char *obj_start)
+{
+  const char *p;
+  int depth = 0;
+  int in_string = 0;
+  int escaped = 0;
+  char ch;
+
+  if (obj_start == NULL || *obj_start != '{')
+  {
+    return NULL;
+  }
+
+  for (p = obj_start; *p != '\0'; p++)
+  {
+    ch = *p;
+
+    if (in_string)
+    {
+      if (escaped)
+      {
+        escaped = 0;
+      }
+      else if (ch == '\\')
+      {
+        escaped = 1;
+      }
+      else if (ch == '"')
+      {
+        in_string = 0;
+      }
+      continue;
+    }
+
+    if (ch == '"')
+    {
+      in_string = 1;
+    }
+    else if (ch == '{')
+    {
+      depth++;
+    }
+    else if (ch == '}')
+    {
+      depth--;
+      if (depth == 0)
+      {
+        return p;
+      }
+      if (depth < 0)
+      {
+        return NULL;
+      }
+    }
+  }
+
+  return NULL;
+}
+
 int Weather_ParseNowResponse(const char *response, WeatherNow *out)
 {
   char temp_num[8];
@@ -241,7 +300,7 @@ int Weather_ParseDailyResponse(const char *response, ForecastDay out[3])
       return 0;
     }
 
-    obj_end = strstr(obj_start, "}");
+    obj_end = FindJsonObjectEnd(obj_start);
     if (obj_end == NULL)
     {
       return 0;

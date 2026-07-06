@@ -46,6 +46,8 @@
 #define MQTT_POLL_INTERVAL_MS       1U
 #define MQTT_POLL_TIMEOUT_MS        500U
 #define WIFI_CHECK_INTERVAL_MS      10000U
+#define MQTT_RECONNECT_INITIAL_DELAY_MS 5000U
+#define MQTT_RECONNECT_MAX_DELAY_MS     60000U
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -82,7 +84,7 @@ const osThreadAttr_t TimeTask_attributes = {
 osThreadId_t Esp32TaskHandle;
 const osThreadAttr_t Esp32Task_attributes = {
   .name = "Esp32Task",
-  .stack_size = 1024 * 4,
+  .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for uiQueue */
@@ -321,6 +323,8 @@ void StartEsp32Task(void *argument)
   uint8_t sntp_tried = 0;
   uint32_t last_weather_tick = 0;
   uint32_t last_wifi_check_tick = 0;
+  uint32_t last_mqtt_attempt_tick = 0;
+  uint32_t mqtt_reconnect_delay_ms = MQTT_RECONNECT_INITIAL_DELAY_MS;
   uint32_t now_tick;
   int mqtt_poll_result;
   char mqtt_topic[128];
@@ -345,6 +349,8 @@ void StartEsp32Task(void *argument)
         wifi_ok = ESP32_ConnectWiFi() ? 1U : 0U;
         mqtt_ok = 0;
         sntp_tried = 0;
+        last_mqtt_attempt_tick = 0;
+        mqtt_reconnect_delay_ms = MQTT_RECONNECT_INITIAL_DELAY_MS;
       }
     }
 
@@ -360,21 +366,45 @@ void StartEsp32Task(void *argument)
 
     if (!mqtt_ok)
     {
-      mqtt_ok = ESP32_MqttConnect() ? 1U : 0U;
-      if (mqtt_ok)
+      if (last_mqtt_attempt_tick == 0U ||
+          (now_tick - last_mqtt_attempt_tick >= mqtt_reconnect_delay_ms))
       {
-        if (!ESP32_MqttSubscribeCmd())
+        last_mqtt_attempt_tick = now_tick;
+
+        mqtt_ok = ESP32_MqttConnect() ? 1U : 0U;
+        if (mqtt_ok)
         {
-          mqtt_ok = 0;
+          if (!ESP32_MqttSubscribeCmd())
+          {
+            mqtt_ok = 0;
+          }
+          else
+          {
+            /* Publish a small state payload; topic and payload are different things. */
+            ESP32_MqttPublish(MQTT_TOPIC_STATE, "wifi=1,mqtt=1");
+          }
+        }
+
+        if (mqtt_ok)
+        {
+          last_mqtt_attempt_tick = 0;
+          mqtt_reconnect_delay_ms = MQTT_RECONNECT_INITIAL_DELAY_MS;
         }
         else
         {
-          /* Publish a small state payload; topic and payload are different things. */
-          ESP32_MqttPublish(MQTT_TOPIC_STATE, "wifi=1,mqtt=1");
+          if (mqtt_reconnect_delay_ms < (MQTT_RECONNECT_MAX_DELAY_MS / 2U))
+          {
+            mqtt_reconnect_delay_ms *= 2U;
+          }
+          else
+          {
+            mqtt_reconnect_delay_ms = MQTT_RECONNECT_MAX_DELAY_MS;
+          }
         }
+
+        AppUi_ModelSetMqttOk(mqtt_ok);
+        AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
       }
-      AppUi_ModelSetMqttOk(mqtt_ok);
-      AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
     }
 
     if (!sntp_tried)
@@ -458,6 +488,8 @@ void StartEsp32Task(void *argument)
       else if (mqtt_poll_result < 0)
       {
         mqtt_ok = 0;
+        last_mqtt_attempt_tick = HAL_GetTick();
+        mqtt_reconnect_delay_ms = MQTT_RECONNECT_INITIAL_DELAY_MS;
         AppUi_ModelSetMqttOk(0);
         AppUi_PostMessage(UI_MSG_NETWORK_CHANGE);
       }
@@ -580,6 +612,25 @@ static void Mqtt_HandleCmd(const char *payload)
   {
     AppUi_PostMessage(UI_MSG_OK);
     ESP32_MqttPublish(MQTT_TOPIC_ACK, "weather_refresh_ok");
+  }
+}
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+  (void)xTask;
+  (void)pcTaskName;
+
+  taskDISABLE_INTERRUPTS();
+  for (;;)
+  {
+  }
+}
+
+void vApplicationMallocFailedHook(void)
+{
+  taskDISABLE_INTERRUPTS();
+  for (;;)
+  {
   }
 }
 /* USER CODE END Application */

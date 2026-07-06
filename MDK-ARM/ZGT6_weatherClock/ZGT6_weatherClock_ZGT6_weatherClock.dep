@@ -49,7 +49,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -137,7 +137,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (../Core/Inc/app_config_private.h)(0x6A4A4998)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -149,7 +149,7 @@ I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h)(0x6A463
 I (../Core/Inc/esp32_rx.h)(0x6A4A90D5)
 I (../Core/Inc/usart.h)(0x6A4779BE)
 I (../Core/Inc/weather_parser.h)(0x6A49DD98)
-F (../Core/Src/esp32_rx.c)(0x6A4A955C)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\esp32_rx.o --omf_browse zgt6_weatherclock\esp32_rx.crf --depend zgt6_weatherclock\esp32_rx.d)
+F (../Core/Src/esp32_rx.c)(0x6A4B0D29)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\esp32_rx.o --omf_browse zgt6_weatherclock\esp32_rx.crf --depend zgt6_weatherclock\esp32_rx.d)
 I (../Core/Inc/esp32_rx.h)(0x6A4A90D5)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x6A46402F)
@@ -187,7 +187,7 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h)(0x6A46402F)
 I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -201,7 +201,7 @@ I (../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h)(0x6A463FBE)
 I (../Core/Inc/usart.h)(0x6A4779BE)
 I (../Core/Inc/main.h)(0x6A46A114)
-F (../Core/Src/weather_parser.c)(0x6A49DE40)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\weather_parser.o --omf_browse zgt6_weatherclock\weather_parser.crf --depend zgt6_weatherclock\weather_parser.d)
+F (../Core/Src/weather_parser.c)(0x6A4B0E74)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\weather_parser.o --omf_browse zgt6_weatherclock\weather_parser.crf --depend zgt6_weatherclock\weather_parser.d)
 I (../Core/Inc/weather_parser.h)(0x6A49DD98)
 I (../Core/Inc/app_types.h)(0x6A4A309E)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -245,7 +245,7 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h)(0x6A46402F)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h)(0x6A46402F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -294,11 +294,11 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h)(0x6A46402F)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h)(0x6A46402F)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h)(0x6A46402F)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h)(0x6A46402F)
-F (../Core/Src/freertos.c)(0x6A4A931F)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\freertos.o --omf_browse zgt6_weatherclock\freertos.crf --depend zgt6_weatherclock\freertos.d)
+F (../Core/Src/freertos.c)(0x6A4B0D19)(--c99 -c --cpu Cortex-M4.fp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_ZGT6_weatherClock-ID:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-ID:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx-o zgt6_weatherclock\freertos.o --omf_browse zgt6_weatherclock\freertos.crf --depend zgt6_weatherclock\freertos.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1244,7 +1244,7 @@ F (../Middlewares/Third_Party/FreeRTOS/Source/croutine.c)(0x6A463FBE)(--c99 -c -
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1258,7 +1258,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1273,7 +1273,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1286,7 +1286,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1300,7 +1300,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1315,7 +1315,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1330,7 +1330,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1348,7 +1348,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (../Drivers/CMSIS/Include/cmsis_compiler.h)(0x6A46402F)
 I (../Drivers/CMSIS/Include/cmsis_armcc.h)(0x6A46402F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1396,7 +1396,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
@@ -1408,7 +1408,7 @@ F (../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c)(0x6
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x6A463FBE)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
-I (../Core/Inc/FreeRTOSConfig.h)(0x6A464036)
+I (../Core/Inc/FreeRTOSConfig.h)(0x6A4B0D19)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h)(0x6A463FBE)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h)(0x6A463FBE)
