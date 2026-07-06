@@ -26,11 +26,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "app_ui.h"
 #include "app_config_private.h"
 #include "esp32_client.h"
+#include "ota_update.h"
 #include "rtc.h"
 /* USER CODE END Includes */
 
@@ -99,6 +101,10 @@ static int RTC_SetDateTime(const RTC_DateTypeDef *date, const RTC_TimeTypeDef *t
 static int ParseISOTime(const char *str, RTC_DateTypeDef *date, RTC_TimeTypeDef *time);
 static int RTC_SetFromWeatherTime(const char *time_str);
 static void Mqtt_HandleCmd(const char *payload);
+static void Mqtt_HandleOtaBegin(const char *payload);
+static void Mqtt_HandleOtaChunk(const char *payload);
+static void Mqtt_HandleOtaEnd(void);
+static void Mqtt_PublishOtaStatus(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartKeyTask(void *argument);
@@ -328,7 +334,7 @@ void StartEsp32Task(void *argument)
   uint32_t now_tick;
   int mqtt_poll_result;
   char mqtt_topic[128];
-  char mqtt_payload[256];
+  char mqtt_payload[512];
 
   osDelay(3000);
 
@@ -613,6 +619,138 @@ static void Mqtt_HandleCmd(const char *payload)
     AppUi_PostMessage(UI_MSG_OK);
     ESP32_MqttPublish(MQTT_TOPIC_ACK, "weather_refresh_ok");
   }
+  else if (strncmp(payload, "ota_begin:", 10) == 0)
+  {
+    Mqtt_HandleOtaBegin(payload);
+  }
+  else if (strncmp(payload, "ota_chunk:", 10) == 0)
+  {
+    Mqtt_HandleOtaChunk(payload);
+  }
+  else if (strcmp(payload, "ota_end") == 0)
+  {
+    Mqtt_HandleOtaEnd();
+  }
+  else if (strcmp(payload, "ota_abort") == 0)
+  {
+    Ota_Abort();
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_abort_ok");
+  }
+  else if (strcmp(payload, "ota_status") == 0)
+  {
+    Mqtt_PublishOtaStatus();
+  }
+  else if (strcmp(payload, "ota_reboot") == 0)
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_rebooting");
+    osDelay(300);
+    NVIC_SystemReset();
+  }
+}
+
+static void Mqtt_HandleOtaBegin(const char *payload)
+{
+  const char *p;
+  char *end;
+  uint32_t image_size;
+  uint32_t image_crc32;
+  uint32_t image_version = 0;
+
+  p = payload + 10;
+  image_size = strtoul(p, &end, 0);
+  if (*end != ':')
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_begin_bad_size");
+    return;
+  }
+
+  p = end + 1;
+  image_crc32 = strtoul(p, &end, 16);
+  if (*end == ':')
+  {
+    image_version = strtoul(end + 1, &end, 0);
+  }
+
+  if (*end != '\0')
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_begin_bad_arg");
+    return;
+  }
+
+  if (Ota_Begin(image_size, image_crc32, image_version))
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_begin_ok");
+  }
+  else
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_begin_fail");
+  }
+}
+
+static void Mqtt_HandleOtaChunk(const char *payload)
+{
+  const char *hex;
+  char *end;
+  uint32_t offset;
+  char ack[64];
+
+  offset = strtoul(payload + 10, &end, 0);
+  if (*end != ':')
+  {
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, "ota_chunk_bad_offset");
+    return;
+  }
+
+  hex = end + 1;
+  if (Ota_WriteHexChunk(offset, hex))
+  {
+    snprintf(ack, sizeof(ack), "ota_chunk_ok:%lu", Ota_GetReceivedSize());
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, ack);
+  }
+  else
+  {
+    snprintf(ack, sizeof(ack), "ota_chunk_fail:%lu", Ota_GetReceivedSize());
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, ack);
+  }
+}
+
+static void Mqtt_HandleOtaEnd(void)
+{
+  char ack[96];
+
+  if (Ota_Finish())
+  {
+    snprintf(ack,
+             sizeof(ack),
+             "ota_ready:%lu:%08lX",
+             Ota_GetReceivedSize(),
+             Ota_GetCurrentCrc32());
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, ack);
+  }
+  else
+  {
+    snprintf(ack,
+             sizeof(ack),
+             "ota_end_fail:%lu:%08lX",
+             Ota_GetReceivedSize(),
+             Ota_GetCurrentCrc32());
+    ESP32_MqttPublish(MQTT_TOPIC_ACK, ack);
+  }
+}
+
+static void Mqtt_PublishOtaStatus(void)
+{
+  char status[128];
+
+  snprintf(status,
+           sizeof(status),
+           "ota_status:%s:%lu/%lu:%08lX/%08lX",
+           Ota_GetStatusText(),
+           Ota_GetReceivedSize(),
+           Ota_GetExpectedSize(),
+           Ota_GetCurrentCrc32(),
+           Ota_GetExpectedCrc32());
+  ESP32_MqttPublish(MQTT_TOPIC_ACK, status);
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)

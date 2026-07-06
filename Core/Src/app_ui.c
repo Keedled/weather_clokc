@@ -5,6 +5,8 @@
 
 #include "ST7735.h"
 
+#define APP_UI_VERSION_TEXT "OTA3"
+
 typedef enum {
     PAGE_HOME = 0,
     PAGE_WEATHER,
@@ -490,7 +492,7 @@ static void UI_DrawDebugPage(const UiModel *model)
 {
   Z_ST7735S_RefreshAll(ST7735_BLACK);
 
-  UI_DrawText(5, 5, "DEBUG", ST7735_WHITE);
+  UI_DrawText(5, 5, "DEBUG " APP_UI_VERSION_TEXT, ST7735_WHITE);
   UI_DrawText(5, 23, "WiFi:", ST7735_WHITE);
   UI_DrawText(65, 23, model->wifi_ok ? "OK" : "NO", model->wifi_ok ? ST7735_GREEN : ST7735_RED);
   UI_DrawText(5, 40, "MQTT:", ST7735_WHITE);

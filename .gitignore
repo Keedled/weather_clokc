@@ -1,8 +1,11 @@
 Core/Inc/app_config_private.h
 *.uvguix.*
 *.uvoptx
+*.log
+*.lst
 Objects/
 Listings/
+MDK-ARM/ZGT6_weatherClock/
 MDK-ARM/ZGT6_weatherClock/*.o
 MDK-ARM/ZGT6_weatherClock/*.d
 MDK-ARM/ZGT6_weatherClock/*.crf
@@ -11,3 +14,7 @@ MDK-ARM/ZGT6_weatherClock/*.hex
 MDK-ARM/ZGT6_weatherClock/*.htm
 MDK-ARM/ZGT6_weatherClock/*.lnp
 MDK-ARM/ZGT6_weatherClock/*.map
+Bootloader/MDK-ARM/bootloader/
+Bootloader/Bootloader/
+Bootloader/freertostask_bootloadered/
+Bootloader/EWARM/

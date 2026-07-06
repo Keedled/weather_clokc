@@ -14,7 +14,7 @@ typedef enum {
 typedef struct {
   Esp32RxUrcType type;
   char topic[128];
-  char payload[256];
+  char payload[512];
 } Esp32RxUrcEvent;
 
 int ESP32_RxInit(void);
