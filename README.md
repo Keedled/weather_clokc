@@ -14,6 +14,83 @@
 - 基于 MQTT 的 OTA 固件分包传输、CRC32 校验和 Staging 区写入
 - Bootloader 校验 Staging 固件、搬运到 App 区并跳转运行
 
+## 项目实物
+
+<p align="center">
+  <img src="images/Home%20page.jpg" alt="首页运行效果" width="420">
+</p>
+
+<p align="center">
+  <sub>首页显示 RTC 时间、日期、城市、天气状态和温度信息</sub>
+</p>
+
+## 硬件清单
+
+| 模块 | 型号 / 说明 | 用途 |
+| --- | --- | --- |
+| 主控 | STM32F407ZGT6 开发板 | 运行 FreeRTOS、UI、MQTT 控制逻辑和 OTA 写入逻辑 |
+| 联网模块 | ESP32-C3 / ESP32 AT 固件模块 | 提供 WiFi、HTTP、NTP、MQTT 通信能力 |
+| 显示屏 | 1.8 寸 ST7735 128x160 RGB-TFT | 显示首页、天气、预报和调试状态 |
+| 调试器 | ARM 仿真器 / J-Link / ST-Link 兼容调试器 | SWD 下载、调试 Bootloader 和 App |
+| MQTT Broker | PC 端 Mosquitto | 接收和转发 MQTT 控制命令、OTA 数据和 ACK |
+| 辅助器件 | 杜邦线、面包板、稳定 3.3V 电源 | 硬件连接和供电 |
+
+<table>
+  <tr>
+    <td align="center"><img src="images/stm32F407ZGT6.jpg" alt="STM32F407ZGT6 开发板" width="240"></td>
+    <td align="center"><img src="images/esp32-c3.jpg" alt="ESP32-C3 模块" width="240"></td>
+    <td align="center"><img src="images/ARM仿真器.jpg" alt="ARM 仿真器" width="240"></td>
+  </tr>
+  <tr>
+    <td align="center">STM32F407ZGT6 主控板</td>
+    <td align="center">ESP32-C3 AT 通信模块</td>
+    <td align="center">ARM SWD 调试器</td>
+  </tr>
+</table>
+
+## 硬件接线
+
+### ESP32 AT 模块
+
+ESP32 与 STM32 通过 `USART1` 通信，波特率为 `115200`，TX/RX 需要交叉连接。
+
+| STM32F407 引脚 | ESP32 AT 模块 | 说明 |
+| --- | --- | --- |
+| PA9 / USART1_TX | ESP32 RX | STM32 发送 AT 指令到 ESP32 |
+| PA10 / USART1_RX | ESP32 TX | STM32 接收 ESP32 返回和 MQTT URC |
+| GND | GND | 两端必须共地 |
+| 3.3V | 3.3V / VCC | 建议使用稳定 3.3V 供电 |
+
+### ST7735 LCD
+
+LCD 使用 `SPI3` 写入显示数据，当前工程只使用 SCK 和 MOSI，不使用 MISO。
+
+| STM32F407 引脚 | ST7735 引脚 | 说明 |
+| --- | --- | --- |
+| PB3 / SPI3_SCK | SCL / SCK | SPI 时钟 |
+| PB5 / SPI3_MOSI | SDA / DIN | SPI 数据 |
+| PD10 | RES / RST | LCD 复位 |
+| PD11 | CS | 片选 |
+| PD12 | DC | 数据 / 命令选择 |
+| PD13 | BLK / BL | 背光控制 |
+| GND | GND | 共地 |
+| 3.3V | VCC | 建议使用 3.3V 供电 |
+
+### 按键与调试接口
+
+| STM32F407 引脚 | 功能 | 说明 |
+| --- | --- | --- |
+| PE2 | KEY_RIGHT | 右键，内部上拉，按下接地 |
+| PE3 | KEY_LEFT | 左键，内部上拉，按下接地 |
+| PE4 | KEY_OK | 确认键，内部上拉，按下接地 |
+| PE5 | KEY_BACK | 返回键，内部上拉，按下接地 |
+| PA15 | KEY_USER | 用户键，内部上拉，按下接地 |
+| PC13 | LED_RUN | 运行状态 LED |
+| PA13 / SWDIO | 调试器 SWDIO | SWD 下载与调试 |
+| PA14 / SWCLK | 调试器 SWCLK | SWD 下载与调试 |
+| NRST | 调试器 NRST | 可选复位线 |
+| GND | 调试器 GND | 调试器与板子共地 |
+
 ## 系统架构
 
 ```mermaid
@@ -234,4 +311,3 @@ ota_rebooting
 - `Docs/ota_bringup.md`：Bootloader / App 首次烧录和 OTA 联调说明
 - `Docs/ota_mqtt_protocol.md`：MQTT OTA 协议和 PC 发送脚本说明
 - `Bootloader/README.md`：Bootloader 启动流程和 Flash 分区说明
-
